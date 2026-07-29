@@ -1,4 +1,5 @@
 /*1. La liste des employé·e·s avec le nom de leur service, triée par service puis par nom.*/
+
 SELECT s.nom AS "Service", e.nom AS "Nom", e.prenom AS "Prenom"
 FROM employe e
 JOIN service s ON e.service_id = s.id
@@ -16,6 +17,8 @@ GROUP BY s.nom
 SELECT ROUND(SUM(prix_centimes)/100.0, 2) AS "Chiffre d'affaire total de la machine à café" 
 FROM transaction_cafe
 
+/* 904, 60 € sur la période */
+
 /*4. Le nombre de cafés tirés par boisson — quelle est la boisson la plus populaire chez Adakor ?*/
 
 SELECT DISTINCT boisson, COUNT(boisson) AS "Nombre de boisson tiré" 
@@ -32,7 +35,18 @@ JOIN employe e ON e.id = tc.employe_id
 GROUP BY e.nom , e.prenom
 ORDER BY "total en euros" DESC
 
-/*6. Les personnes qui tirent en moyenne plus de 4 cafés par jour de présence. Quelque chose te surprend ? Note-le en commentaire… puis va voir la question 7 avant de conclure.*/
+
+
+/*6. Les personnes qui tirent en moyenne plus de 4 cafés par jour de présence. Quelque chose te surprend ? Note-le en commentaire… puis va voir
+la question 7 avant de conclure.*/
+
+SELECT e.nom, e.prenom, COUNT(tc.boisson) AS "Nombre de boisson tiré par boisson"
+FROM transaction_cafe tc
+JOIN employe e ON e.id = tc.employe_id
+GROUP BY e.nom , e.prenom
+ORDER BY "Nombre de boisson tiré par boisson" DESC
+
+/*Marc Petit et Julien Weber tirent le plus de boissons à la machine*/ 
 
 /*7. Pour la personne repérée en 6 : à quelles heures tire-t-elle ses cafés ? Toutes les boissons sont-elles pour elle ? (Indice : personne ne boit 4 cappuccinos ET 3 chocolats ET 2 thés par jour. Hypothèse plausible : elle badge pour tout son open space. Une anomalie n'est pas une preuve.)*/
 
@@ -67,6 +81,28 @@ ORDER BY b.horodatage
 
 /*11. Le badge a aussi servi à la machine à café ces soirs-là. Prouve-le.*/
 
+SELECT e.nom, e.prenom, c.employe_id, CONCAT(c.date_debut,' / ', c.date_fin) AS periode_conge,
+to_char(tc.horodatage, 'YYYY-MM-dd  HH24:MI:SS') AS date_tirage_boisson
+FROM transaction_cafe tc
+
+JOIN conge c ON c.employe_id = tc.employe_id
+JOIN employe e ON e.id = c.employe_id
+
+WHERE tc.horodatage BETWEEN c.date_debut AND c.date_fin
+GROUP BY c.employe_id, c.date_debut, c.date_fin, e.nom, e.prenom, tc.horodatage
+ORDER BY tc.horodatage
+
 
 /*12. La question à 1 million : qui était physiquement présent·e ces soirs-là ? Le badge de la porte peut s'emprunter… mais on vient en voiture avec son propre badge de parking. Croise les accès parking avec les horaires des badgeages suspects.*/
+
+SELECT e.nom, e.prenom, b.employe_id, a.horodatage AS date_acces_parking, a.sens AS sens_acces_parking
+FROM badgeage b
+
+JOIN acces_parking a ON a.employe_id = b.employe_id
+JOIN employe e ON e.id = b.employe_id
+
+WHERE b.horodatage::time > '21:00' AND a.horodatage::time > '21:00'
+GROUP BY b.sens, b.porte, b.employe_id, e.nom, e.prenom, a.horodatage, a.sens
+ORDER BY  a.horodatage
+
 /*13. Vérifie ton hypothèse : la personne suspectée a-t-elle badgé à une porte avec son propre badge ces soirs-là ? Que faisait-elle les jours en question (ses badgeages en journée) ?*/

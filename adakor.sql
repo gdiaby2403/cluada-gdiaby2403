@@ -30,8 +30,8 @@ CREATE TABLE conge (
   type type_conge NOT NULL
 );
 
-CREATE TABLE badgeage (
-  id INTEGER PRIMARY KEY,
+CREATE TABLE badgeage ( /*nom de la tabale : badgeage*/
+  id INTEGER PRIMARY KEY, /*id est de type ENTIER et c'est une clé primaire*/
   employe_id INTEGER NOT NULL REFERENCES employe(id),
   horodatage TIMESTAMP NOT NULL,
   sens sens_badge NOT NULL,
